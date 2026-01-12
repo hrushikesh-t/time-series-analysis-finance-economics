@@ -39,3 +39,27 @@ Box–Jenkins methodology, including identification, estimation, diagnostic chec
 - Validated model adequacy using residual diagnostics and Ljung-Box test
 
 **Final Model:** SARIMA(1,1,1)(1,1,1)[12]
+
+## Results & Insights
+
+### Financial Analysis: BlackRock Stock Returns
+- Daily stock returns fluctuated around zero with no persistent trend
+- Forecasts remained close to zero with wide confidence intervals
+- Indicates that short-term price movements are largely unpredictable
+
+**Business Insight:**  
+Historical price data alone is not sufficient for short-term stock price prediction. 
+However, the model is useful for estimating volatility and risk, which can support 
+portfolio risk management rather than directional trading decisions.
+
+---
+
+### Economic Analysis: California Unemployment Rate
+- The unemployment rate exhibited strong annual seasonality
+- SARIMA forecasts successfully captured recurring seasonal patterns
+- Confidence intervals provided realistic bounds for future unemployment levels
+
+**Business Insight:**  
+The predictable seasonal behavior of unemployment enables policymakers and analysts 
+to distinguish normal seasonal fluctuations from structural economic changes, supporting 
+better work
