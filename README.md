@@ -63,3 +63,21 @@ portfolio risk management rather than directional trading decisions.
 The predictable seasonal behavior of unemployment enables policymakers and analysts 
 to distinguish normal seasonal fluctuations from structural economic changes, supporting 
 better work
+
+## Tech Stack
+- R
+- Time Series Analysis
+- AR, MA, ARMA
+- SARIMA
+- ADF Test, ACF, PACF
+- Statistical Modeling & Forecasting
+## How to Run
+1. Clone the repository
+2. Open the R Markdown file in RStudio
+3. Install required R packages if not already installed
+4. Knit the `.Rmd` file to reproduce the analysis and results
+## Key Learnings
+- Financial return series are often unpredictable in the short term
+- Seasonal differencing is critical for modeling economic time series
+- Model diagnostics are essential to validate forecasting models
+- Statistical models provide more value for risk estimation than price prediction
