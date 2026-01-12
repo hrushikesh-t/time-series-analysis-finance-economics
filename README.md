@@ -81,3 +81,5 @@ better work
 - Seasonal differencing is critical for modeling economic time series
 - Model diagnostics are essential to validate forecasting models
 - Statistical models provide more value for risk estimation than price prediction
+📄 **Full Report:** [Time Series Analysis Report](report/Time_Series_Analysis_Report.pdf)
+
