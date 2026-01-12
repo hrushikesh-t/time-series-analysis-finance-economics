@@ -1,0 +1,202 @@
+---
+title: "MA 641 Final Project"
+author: "Hrushikesh Thanikonda"
+date: "2025-12-12"
+output: pdf_document
+---
+# Appendix 
+## Time Series Analysis of Black Rock Daily - Stock Prices (Non- Seasonal)
+```{r}
+# Importing Blackrock data set 
+blk <- read.csv("C:\\Users\\hrush\\OneDrive\\Desktop\\Time Series Analysis Project\\BlackRockData2025.csv")
+# calculating returns
+n <- length(blk$BLK.Adjusted)
+blkReturns <-( blk$BLK.Adjusted[2:n]-blk$BLK.Adjusted[1:(n-1)])/blk$BLK.Adjusted[1:(n-1)]
+# converting BlackRock returns to ts
+blkRetTs <- ts(blkReturns)
+plot(blkRetTs,main = "Daily Returns of BlackRock",ylab ="Returns",col = "red")
+```
+
+```{r}
+# we notice that mean is around 0 and we'll check for stationarity
+acf(blkRetTs,main = "ACF of daily Returns")
+
+```
+
+```{r}
+# we notice that there are no significant spikes in ACF plot => weak dependence
+pacf(blkRetTs,main = "PACF of daily Returns")
+```
+
+```{r}
+# We notice that there are no significant spikes 
+# Agumented Dickey Fuller Test to confrim stationrity
+library(tseries)
+adf.test(blkRetTs)
+```
+```{r}
+#as p-value <0.05 we reject Ho i.e., Time series are stationary and no differencing required
+size <- length(blkRetTs)
+trainSize <- floor(0.8 * size)
+
+train <- blkRetTs[1:trainSize]
+test  <- blkRetTs[(trainSize + 1):size]
+
+#fitting the modelson training set
+ar1<- arima(train, order = c(1, 0, 0))
+ma1 <- arima(train, order = c(0, 0, 1))
+arma11 <- arima(train, order = c(1, 0, 1))
+cat("AR1 fit Results:\n")
+print(ar1)
+cat("MA1 fit Results:\n")
+print(ma1)
+cat("ARMA(1,1) fit Results:\n")
+print(arma11)
+```
+## checking residual ACF
+```{r}
+acf(residuals(ar1),main = "ACF of Residuals: AR(1)")
+acf(residuals(ma1),main = "ACF of Residuals: MA(1)")
+acf(residuals(arma11),main = "ACF of Residuals: ARMA(1,1)")
+```
+## We notice that all 3 are similar so we compare AIC's
+```{r}
+aicValues <- AIC(ar1, ma1, arma11)
+cat("Lowest AIC value is:",min(aicValues$AIC),"for model:",rownames(aicValues)[order(aicValues$AIC)[1]])
+```
+## We noitice that phi value is near to 0 so we can forecast
+```{r}
+prediction <- predict(arma11, n.ahead = length(test))
+fc <- prediction$pred
+# 95% confidence intervals for forecasts
+upper <- prediction$pred + 1.96 * prediction$se
+lower <- prediction$pred - 1.96 * prediction$se
+
+```
+
+## Comparing forecast results with actual returns
+```{r}
+plot(blkRetTs,type = "l",col = "black",main = "Forecast vs Actual Returns",ylab = "Returns",xlab = "Time")
+
+# Forecasted returns
+lines((trainSize + 1):(trainSize + length(test)),fc,col = "red",lty = 2)
+
+# Confidence intervals
+lines((trainSize + 1):(trainSize + length(test)),upper,col = "blue",
+      lty = 3)
+
+lines((trainSize + 1):(trainSize + length(test)),
+      lower,
+      col = "blue",
+      lty = 3)
+
+# Train/test split
+abline(v = trainSize, col = "darkgreen", lty = 4)
+
+legend("topright",legend = c("Actual Returns","Forecast","95% Confidence Interval","Train/Test Split"),
+       col = c("black", "red", "blue", "darkgreen"),
+       lty = c(1, 2, 3, 4))
+
+
+```
+# Time Series Analysis of Unemployement in California State (Seasonal)
+```{r}
+# Import california unemployment data
+caur <- read.csv("C://Users//hrush/OneDrive//Desktop//Time Series Analysis Project//CAUR.csv")
+
+# Convert to monthly time series
+cts <- ts(caur$CAUR,start = c(1976, 1),frequency = 12)
+
+# Plot the series
+plot(cts,main = "Monthly Unemployment Rate (1976–2025)",ylab = "Unemployment Rate",xlab = "Time")
+```
+
+## Checking for correlations 
+```{r}
+acf(cts,main = "ACF of Monthly Unemployment Rate")
+```
+
+## We notice ACF decays slowly => series are not stationary 
+```{r}
+cdiff <- diff(cts,differences = 1)
+plot(cdiff,main ="First Differenced Unemployment rate",ylab = "Differenced Value",xlab="Time")
+```
+### Plot seems to be stationary after first differencing
+```{r}
+acf(cdiff,main = "ACF plot of differenced series ")
+```
+
+### From acf we can still see structure at lag 12(i.e., 1) so we mignt need seasonal differencing 
+```{r}
+cDiff <- diff(cdiff,lag = 12)
+plot(cDiff,main = "Differenced Unemployment Rate (d = 1, D = 1)",ylab = "Differenced Value",xlab = "Time")
+acf(cDiff,main = "ACF after Regular + Seasonal Differencing")
+pacf(cDiff,main = "PACF after Regular + Seasonal Differencing")
+
+```
+
+```{r}
+# ARIMA(1,1,0)(1,1,1)[12]
+sarimaAr <- arima(cts,
+                   order = c(1, 1, 0),
+                   seasonal = list(order = c(1, 1, 1), period = 12))
+
+# ARIMA(0,1,1)(1,1,1)[12]
+sarimaMa <- arima(cts,
+                   order = c(0, 1, 1),
+                   seasonal = list(order = c(1, 1, 1), period = 12))
+
+# ARIMA(1,1,1)(1,1,1)[12]
+sarimaArma <- arima(cts,
+                     order = c(1, 1, 1),
+                     seasonal = list(order = c(1, 1, 1), period = 12))
+cat("SARIMA(1,1,0)(1,1,1)[12] Results:\n")
+print(sarimaAr)
+
+cat("\nSARIMA(0,1,1)(1,1,1)[12] Results:\n")
+print(sarimaMa)
+
+cat("\nSARIMA(1,1,1)(1,1,1)[12] Results:\n")
+print(sarimaArma)
+
+```
+## Check AIC values to choose the model
+```{r}
+aicValuesS <- AIC(sarimaAr,sarimaMa,sarimaArma)
+cat("Lowest AIC value is:",min(aicValuesS$AIC),"for model:",rownames(aicValuesS)[order(aicValuesS$AIC)[1]])
+
+```
+## Residual Diagnostics
+```{r}
+acf(residuals(sarimaArma),
+    main = "Residual ACF: SARIMA(1,1,1)(1,1,1)[12]")
+
+pacf(residuals(sarimaArma),
+     main = "Residual PACF: SARIMA(1,1,1)(1,1,1)[12]")
+
+```
+```{r}
+Box.test(residuals(sarimaArma),lag = 24,type = "Ljung-Box")
+```
+
+```{r}
+sPrediction <- predict(sarimaArma, n.ahead = 12)
+
+sFc <- sPrediction$pred
+
+sUpper <- sPrediction$pred + 1.96 * sPrediction$se
+sLower <- sPrediction$pred - 1.96 * sPrediction$se
+
+plot(cts,type = "l",col = "black",main = "Forecast vs Actual Unemployment Rate",ylab = "Unemployment Rate",xlab = "Time")
+# Forecasted values
+lines(sFc,col = "red",lty = 2)
+# Confidence intervals
+lines(sUpper,col = "blue",lty = 3)
+lines(sLower,col = "blue",lty = 3)
+
+legend("topright",
+       legend = c("Observed","Forecast","95% Confidence Interval"),
+       col = c("black", "red", "blue"),
+       lty = c(1, 2, 3))
+
+```
